@@ -1,0 +1,38 @@
+{
+  "$schema": "../../schemas/json/appspec.json",
+  "version": "0.0",
+  "resources": [
+    {
+      "targetService": {
+        "type": "AWS::ECS::Service",
+        "properties": {
+          "taskDefinition": "[Your task definition arn]",
+          "loadBalancerInfo": {
+            "containerName": "[Your container Name]",
+            "containerPort": 8000
+          },
+          "PlatformVersion": "[Version number, ex: 1.3.0]",
+          "NetworkConfiguration": {
+            "AwsvpcConfiguration": {
+              "Subnets": [
+                "SubnetId1",
+                "SubnetId2"
+              ],
+              "SecurityGroups": [
+                "ecs-security-group-1"
+              ],
+              "AssignPublicIp": "ENABLED-or-DISABLED"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "hooks": {
+    "BeforeInstall": "BeforeInstallHookLambdaFunctionName",
+    "AfterInstall": "AfterInstallHookLambdaFunctionName",
+    "AfterAllowTestTraffic": "AfterAllowTestTrafficHookLambdaFunctionName",
+    "BeforeAllowTraffic": "SanityTestHookLambdaFunctionName",
+    "AfterAllowTraffic": "ValidationTestHookLambdaFunctionName"
+  }
+}

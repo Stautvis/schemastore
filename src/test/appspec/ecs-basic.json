@@ -1,0 +1,18 @@
+{
+  "$schema": "../../schemas/json/appspec.json",
+  "version": "0.0",
+  "resources": [
+    {
+      "targetService": {
+        "type": "AWS::ECS::Service",
+        "properties": {
+          "taskDefinition": "[Your task definition arn]",
+          "loadBalancerInfo": {
+            "containerName": "[Your container Name]",
+            "containerPort": 8000
+          }
+        }
+      }
+    }
+  ]
+}
