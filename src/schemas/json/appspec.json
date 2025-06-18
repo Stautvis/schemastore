@@ -1,0 +1,354 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemastore.org/appspec.json",
+  "$comment": "https://docs.aws.amazon.com/codedeploy/latest/userguide/reference-appspec-file-structure.html",
+  "title": "AWS CodeDeploy AppSpec",
+  "type": "object",
+  "oneOf": [
+    {
+      "title": "EC2/On-Premises",
+      "required": [
+        "version"
+      ],
+      "properties": {
+        "version": {
+          "$ref": "#/definitions/version"
+        },
+        "os": {
+          "type": "string",
+          "enum": [
+            "linux",
+            "windows"
+          ]
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "source",
+              "destination"
+            ],
+            "properties": {
+              "source": {
+                "type": "string"
+              },
+              "destination": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "file_exists_behavior": {
+          "type": "string",
+          "enum": [
+            "DISALLOW",
+            "OVERWRITE",
+            "RETAIN"
+          ]
+        },
+        "permissions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "object"
+            ],
+            "properties": {
+              "object": {
+                "type": "string"
+              },
+              "pattern": {
+                "type": "string"
+              },
+              "owner": {
+                "type": "string"
+              },
+              "group": {
+                "type": "string"
+              },
+              "mode": {
+                "type": "string"
+              },
+              "acls": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "hooks": {
+          "$ref": "#/definitions/hooksEc2"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "title": "ECS",
+      "required": [
+        "version",
+        "resources"
+      ],
+      "properties": {
+        "version": {
+          "$ref": "#/definitions/version"
+        },
+        "resources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "targetService"
+            ],
+            "properties": {
+              "targetService": {
+                "type": "object",
+                "required": [
+                  "type",
+                  "properties"
+                ],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "AWS::ECS::Service"
+                    ]
+                  },
+                  "properties": {
+                    "type": "object",
+                    "required": [
+                      "taskDefinition",
+                      "loadBalancerInfo"
+                    ],
+                    "properties": {
+                      "taskDefinition": {
+                        "type": "string"
+                      },
+                      "loadBalancerInfo": {
+                        "type": "object",
+                        "properties": {
+                          "containerName": {
+                            "type": "string"
+                          },
+                          "containerPort": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "containerName",
+                          "containerPort"
+                        ]
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "hooks": {
+          "$ref": "#/definitions/hooksEcsLambda"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "title": "Lambda",
+      "required": [
+        "version",
+        "resources"
+      ],
+      "properties": {
+        "version": {
+          "$ref": "#/definitions/version"
+        },
+        "resources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "lambdaFunction"
+            ],
+            "properties": {
+              "lambdaFunction": {
+                "type": "object",
+                "required": [
+                  "functionName",
+                  "functionAlias"
+                ],
+                "properties": {
+                  "functionName": {
+                    "type": "string"
+                  },
+                  "functionAlias": {
+                    "type": "string"
+                  },
+                  "currentVersion": {
+                    "type": "string"
+                  },
+                  "targetVersion": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "hooks": {
+          "$ref": "#/definitions/hooksEcsLambda"
+        }
+      },
+      "additionalProperties": false
+    }
+  ],
+  "definitions": {
+    "hooksEc2": {
+      "type": "object",
+      "properties": {
+        "BeforeBlockTraffic": {
+          "$ref": "#/definitions/hookArray",
+          "description": "You can use this deployment lifecycle event to run tasks on instances before they are deregistered from a load balancer."
+        },
+        "BlockTraffic": {
+          "$ref": "#/definitions/hookArray",
+          "description": " During this deployment lifecycle event, internet traffic is blocked from accessing instances that are currently serving traffic. This event is reserved for the CodeDeploy agent and cannot be used to run scripts."
+        },
+        "AfterBlockTraffic": {
+          "$ref": "#/definitions/hookArray",
+          "description": "You can use this deployment lifecycle event to run tasks on instances after they are deregistered from their respective load balancer."
+        },
+        "ApplicationStop": {
+          "$ref": "#/definitions/hookArray",
+          "description": "This deployment lifecycle event occurs even before the application revision is downloaded. You can specify scripts for this event to gracefully stop the application or remove currently installed packages in preparation for a deployment. The AppSpec file and scripts used for this deployment lifecycle event are from the previous successfully deployed application revision."
+        },
+        "BeforeInstall": {
+          "$ref": "#/definitions/hookArray",
+          "description": "You can use this deployment lifecycle event for preinstall tasks, such as decrypting files and creating a backup of the current version."
+        },
+        "Install": {
+          "$ref": "#/definitions/hookArray",
+          "description": "During this deployment lifecycle event, the CodeDeploy agent copies the revision files from the temporary location to the final destination folder. This event is reserved for the CodeDeploy agent and cannot be used to run scripts."
+        },
+        "AfterInstall": {
+          "$ref": "#/definitions/hookArray",
+          "description": "You can use this deployment lifecycle event for tasks such as configuring your application or changing file permissions."
+        },
+        "ApplicationStart": {
+          "$ref": "#/definitions/hookArray",
+          "description": "You typically use this deployment lifecycle event to restart services that were stopped during ApplicationStop."
+        },
+        "ValidateService": {
+          "$ref": "#/definitions/hookArray",
+          "description": "This is the last deployment lifecycle event. It is used to verify the deployment was completed successfully."
+        },
+        "BeforeAllowTraffic": {
+          "$ref": "#/definitions/hookArray",
+          "description": "You can use this deployment lifecycle event to run tasks on instances before they are deregistered from a load balancer."
+        },
+        "AllowTraffic": {
+          "$ref": "#/definitions/hookArray",
+          "description": "During this deployment lifecycle event, internet traffic is allowed to access instances after a deployment. This event is reserved for the CodeDeploy agent and cannot be used to run scripts."
+        },
+        "AfterAllowTraffic": {
+          "$ref": "#/definitions/hookArray",
+          "description": "You can use this deployment lifecycle event to run tasks on instances after they are registered with a load balancer."
+        }
+      },
+      "additionalProperties": false
+    },
+    "hooksEcsLambda": {
+      "type": "object",
+      "properties": {
+        "BeforeInstall": {
+          "$ref": "#/definitions/hookArray"
+        },
+        "AfterInstall": {
+          "$ref": "#/definitions/hookArray"
+        },
+        "AfterAllowTestTraffic": {
+          "$ref": "#/definitions/hookArray"
+        },
+        "BeforeAllowTraffic": {
+          "$ref": "#/definitions/hookArray"
+        },
+        "AfterAllowTraffic": {
+          "$ref": "#/definitions/hookArray"
+        },
+        "BeforeTrafficShift": {
+          "$ref": "#/definitions/hookArray"
+        },
+        "AfterTrafficShift": {
+          "$ref": "#/definitions/hookArray"
+        },
+        "ValidateService": {
+          "$ref": "#/definitions/hookArray"
+        }
+      },
+      "additionalProperties": false
+    },
+    "hookArray": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "location"
+            ],
+            "properties": {
+              "location": {
+                "type": "string",
+                "description": "Location of the script to run during the deployment lifecycle event. This can be a relative path to the script in the application revision or an absolute path on the instance."
+              },
+              "timeout": {
+                "description": "Timeout in seconds for the script to run. If the script does not complete within this time, it is terminated.",
+                "oneOf": [
+                  {
+                    "pattern": "^\\d+$",
+                    "type": "string"
+                  },
+                  {
+                    "minimum": 0,
+                    "type": "integer"
+                  }
+                ]
+              },
+              "runas": {
+                "type": "string",
+                "description": "The user to run the script as. If not specified, the script runs as the root user on Linux or SYSTEM on Windows."
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      ]
+    },
+    "version": {
+      "title": "Version",
+      "description": "Version number in the format X.Y, where X and Y are integers.",
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+$",
+      "enum": [
+        "0.0"
+      ]
+    }
+  }
+}
